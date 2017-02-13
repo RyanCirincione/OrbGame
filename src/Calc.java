@@ -1,11 +1,6 @@
 
 public class Calc
 {
-	public static double distance(Vector loc1, Vector loc2)
-	{
-		return Math.sqrt(Math.pow(loc1.x - loc2.x, 2) + Math.pow(loc1.y - loc2.y, 2));
-	}
-	
 	public static boolean pointInRect(Vector point, Vector loc1, Vector loc2)
 	{
 		if(loc1.x > loc2.x)

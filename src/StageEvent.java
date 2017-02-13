@@ -557,7 +557,7 @@ public class StageEvent
 		public boolean checkTrigger()
 		{
 			for(int i = 1; i < Game.entities.size(); i++)
-				if(Game.entities.get(i) instanceof Orb && Calc.distance(Game.player.location, Game.entities.get(i).location) < 150)
+				if(Game.entities.get(i) instanceof Orb && Game.player.location.distance2(Game.entities.get(i).location) < 150*150)
 					return true;
 			return false;
 		}

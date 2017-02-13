@@ -68,9 +68,9 @@ public class Orb extends Entity
 		if(cooldown > 0)
 			cooldown--;
 		
-		if(Game.eventHandler.hasEvent("key-down_ ") && Calc.distance(location,
+		if(Game.eventHandler.hasEvent("key-down_ ") && location.distance2(
 				new Vector(Game.mouseLoc.x - Game.S_WIDTH/2 + Game.cameraLoc.x,
-				Game.mouseLoc.y - Game.S_HEIGHT/2 + Game.cameraLoc.y)) <= Game.WHISTLE_RANGE)
+				Game.mouseLoc.y - Game.S_HEIGHT/2 + Game.cameraLoc.y)) <= Game.WHISTLE_RANGE * Game.WHISTLE_RANGE)
 			action = Action.FOLLOWING;
 		
 		if(target instanceof Entity && ((Entity)target).remove)
@@ -86,7 +86,7 @@ public class Orb extends Entity
 			case IDLE:
 				target = null;
 			case FOLLOWING:
-				if(Calc.distance(location, Game.player.location) > FOLLOWING_RANGE)
+				if(location.distance2(Game.player.location) > FOLLOWING_RANGE*FOLLOWING_RANGE)
 					target = Game.player.location.clone();
 				else
 					target = null;
@@ -99,14 +99,14 @@ public class Orb extends Entity
 				}
 				break;
 			case TRAVELING:
-				if(Calc.distance(location, (Vector) target) <= TRAVELING_RANGE)
+				if(location.distance2((Vector) target) <= TRAVELING_RANGE*TRAVELING_RANGE)
 				{
 					target = null;
 					action = Action.IDLE;
 				}
 				break;
 			case FIGHTING:
-				if(Calc.distance(location, ((Entity)target).location) <= volume + ((Entity)target).volume && cooldown == 0)
+				if(location.distance2(((Entity)target).location) <= Math.pow(volume + ((Entity)target).volume, 2) && cooldown == 0)
 				{
 					cooldown = 30;
 					((Entity)target).health -= type == Type.FIGHTER ? 5 : 2;
@@ -114,7 +114,7 @@ public class Orb extends Entity
 				break;
 			case HARVESTING:
 				//TODO Make harvest range a const
-				if(Calc.distance(location, ((Entity)target).location) < volume + ((Entity)target).volume + 5)
+				if(location.distance2(((Entity)target).location) < Math.pow(volume + ((Entity)target).volume + 5, 2))
 					((Harvestable)target).harvest(type == Type.HARVESTER ? 1 : 0);
 				break;
 			default:
@@ -140,9 +140,9 @@ public class Orb extends Entity
 			case FIGHTING:
 				if(cooldown == 0)
 					control = new Vector(((Entity)target).location.x - location.x, ((Entity)target).location.y - location.y);
-				else if(Calc.distance(location, ((Entity)target).location) < volume + ((Entity)target).volume * 2)
+				else if(location.distance2(((Entity)target).location) < Math.pow(volume + ((Entity)target).volume * 2, 2))
 					control = new Vector(location.x - ((Entity)target).location.x, location.y - ((Entity)target).location.y);
-				else if(Calc.distance(location, ((Entity)target).location) > volume + ((Entity)target).volume * 3)
+				else if(location.distance2(((Entity)target).location) > Math.pow(volume + ((Entity)target).volume * 3, 2))
 					control = new Vector(((Entity)target).location.x - location.x, ((Entity)target).location.y - location.y);
 			case HARVESTING:
 				control = new Vector(((Entity)target).location.x - location.x, ((Entity)target).location.y - location.y);

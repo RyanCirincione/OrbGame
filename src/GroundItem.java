@@ -17,7 +17,7 @@ public class GroundItem extends Entity
 	public void tick()
 	{
 		super.tick();
-		if(Calc.distance(location, Game.player.location) < volume + Game.player.volume)
+		if(location.distance2(Game.player.location) < Math.pow(volume + Game.player.volume, 2))
 			if(Game.player.inventory.add(item))
 				remove = true;
 	}

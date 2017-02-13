@@ -47,6 +47,16 @@ public class Vector implements java.io.Serializable
 				y -= delta.y;
 	}
 	
+	public double distance(Vector v)
+	{
+		return Math.sqrt(Math.pow(x - v.x, 2) + Math.pow(y - v.y, 2));
+	}
+	
+	public double distance2(Vector v)
+	{
+		return Math.pow(x - v.x, 2) + Math.pow(y - v.y, 2);
+	}
+	
 	public Vector toPositive()
 	{
 		return new Vector(Math.abs(x), Math.abs(y));

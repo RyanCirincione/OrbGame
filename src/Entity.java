@@ -56,9 +56,9 @@ public class Entity
 	{
 		this.doControl();
 		
-		if(Calc.distance(new Vector(), control) > speed)
+		if(new Vector().distance2(control) > speed*speed)
 		{
-			double distance = Calc.distance(new Vector(), control);
+			double distance = new Vector().distance(control);
 			control.x = control.x * speed / distance;
 			control.y = control.y * speed / distance;
 		}
@@ -78,7 +78,7 @@ public class Entity
 	public void checkCollide(Entity ent)
 	{
 		if(!this.hasFlag(Flag.NOCLIP) && !ent.hasFlag(Flag.NOCLIP) &&
-				Calc.distance(location, ent.location) < volume + ent.volume && this != ent)
+				location.distance2(ent.location) < Math.pow(volume + ent.volume, 2) && this != ent)
 			if(location.equals(ent.location))
 			{
 				location.doDelta(new Vector(Math.random()-0.5, Math.random()-0.5));
@@ -87,14 +87,14 @@ public class Entity
 			else
 			{
 				location.x = location.x + ((location.x - ent.location.x) * (volume + ent.volume) /
-						(Calc.distance(location, ent.location)) - (location.x - ent.location.x)) * ent.mass * (1 - mass);
+						(location.distance(ent.location)) - (location.x - ent.location.x)) * ent.mass * (1 - mass);
 				location.y = location.y + ((location.y - ent.location.y) * (volume + ent.volume) /
-						(Calc.distance(location, ent.location)) - (location.y - ent.location.y)) * ent.mass * (1 - mass);
+						(location.distance(ent.location)) - (location.y - ent.location.y)) * ent.mass * (1 - mass);
 				
 				ent.location.x = ent.location.x + ((ent.location.x - location.x) * (volume + ent.volume) /
-						(Calc.distance(ent.location, location)) - (ent.location.x - location.x)) * mass * (1 - ent.mass);
+						(ent.location.distance(location)) - (ent.location.x - location.x)) * mass * (1 - ent.mass);
 				ent.location.y = ent.location.y + ((ent.location.y - location.y) * (volume + ent.volume) /
-						(Calc.distance(ent.location, location)) - (ent.location.y - location.y)) * mass * (1 - ent.mass);
+						(ent.location.distance(location)) - (ent.location.y - location.y)) * mass * (1 - ent.mass);
 			}
 	}
 	
