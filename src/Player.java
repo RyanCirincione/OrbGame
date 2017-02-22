@@ -29,13 +29,13 @@ public class Player extends Entity
 	{
 		super.doControl();
 		
-		if(Game.eventHandler.hasEvent("key-down_d"))
+		if(Game.control.isPressed("D"))
 			control.x = speed;
-		if(Game.eventHandler.hasEvent("key-down_s"))
+		if(Game.control.isPressed("S"))
 			control.y = speed;
-		if(Game.eventHandler.hasEvent("key-down_a"))
+		if(Game.control.isPressed("A"))
 			control.x = -speed;
-		if(Game.eventHandler.hasEvent("key-down_w"))
+		if(Game.control.isPressed("W"))
 			control.y = -speed;
 	}
 	

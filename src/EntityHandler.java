@@ -46,7 +46,6 @@ public class EntityHandler
 		for(int i = 0; i < entities.size(); i++)
 			if(entities.get(i).remove)
 			{
-				Game.eventQueue.addEvent(new Event("entity-remove", 1, entities.get(i)));
 				Game.selectedEntities.remove(entities.get(i));
 				entities.remove(i);
 				i--;

@@ -49,7 +49,7 @@ public class Entity
 	
 	public void click()
 	{
-		Game.eventQueue.addEvent(new Event("entity-click", 1, this, Game.eventHandler.hasEvent("mouse-press_1") ? 1 : 3));
+		
 	}
 	
 	public void tick()

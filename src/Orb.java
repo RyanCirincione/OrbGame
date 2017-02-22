@@ -68,9 +68,9 @@ public class Orb extends Entity
 		if(cooldown > 0)
 			cooldown--;
 		
-		if(Game.eventHandler.hasEvent("key-down_ ") && location.distance2(
-				new Vector(Game.mouseLoc.x - Game.S_WIDTH/2 + Game.cameraLoc.x,
-				Game.mouseLoc.y - Game.S_HEIGHT/2 + Game.cameraLoc.y)) <= Game.WHISTLE_RANGE * Game.WHISTLE_RANGE)
+		if(Game.control.isPressed("Space") && location.distance2(
+				new Vector(Game.control.mouse.x - Game.S_WIDTH/2 + Game.cameraLoc.x,
+				Game.control.mouse.y - Game.S_HEIGHT/2 + Game.cameraLoc.y)) <= Game.WHISTLE_RANGE * Game.WHISTLE_RANGE)
 			action = Action.FOLLOWING;
 		
 		if(target instanceof Entity && ((Entity)target).remove)
@@ -91,12 +91,13 @@ public class Orb extends Entity
 				else
 					target = null;
 				
-				if(Game.eventHandler.hasEvent("entity-click") && Game.eventHandler.getData("entity-click").get(0)
-						instanceof Harvestable && Game.eventHandler.getData("entity-click").get(1).equals(3))
-				{
-					target = Game.eventHandler.getData("entity-click").get(0);
-					action = Action.HARVESTING;
-				}
+				//TODO Completely fix harvesting to not be in terms of eventHandler
+//				if(Game.eventHandler.hasEvent("entity-click") && Game.eventHandler.getData("entity-click").get(0)
+//						instanceof Harvestable && Game.eventHandler.getData("entity-click").get(1).equals(3))
+//				{
+//					target = Game.eventHandler.getData("entity-click").get(0);
+//					action = Action.HARVESTING;
+//				}
 				break;
 			case TRAVELING:
 				if(location.distance2((Vector) target) <= TRAVELING_RANGE*TRAVELING_RANGE)
@@ -121,11 +122,10 @@ public class Orb extends Entity
 				break;
 		}
 		
-		if(Game.eventHandler.hasEvent("mouse-click_1") && Game.selectedEntities.contains(this) &&
-				!Game.eventHandler.hasEvent("panel-click"))
+		if(Game.control.isJustReleased("M1") && Game.selectedEntities.contains(this))
 		{
 			action = Action.TRAVELING;
-			Vector click = ((Vector) Game.eventHandler.getData("mouse-click_1").get(0)).clone();
+			Vector click = ((Vector) Game.control.mouse.clone());
 			target = new Vector(click.x - Game.S_WIDTH/2 + Game.cameraLoc.x, click.y - Game.S_HEIGHT/2 + Game.cameraLoc.y);
 		}
 

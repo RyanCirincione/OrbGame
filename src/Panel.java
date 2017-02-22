@@ -30,33 +30,30 @@ public class Panel
 	
 	public void open()
 	{
-		Game.eventQueue.addEvent(new Event("panel-open", 1, title));
 		Game.openPanels.add(this);
 		Game.closedPanels.remove(this);
 	}
 	
 	public void click()
 	{
-		Game.eventQueue.addEvent(new Event("panel-click", 1, this));
-		
-		if(minimizable && Calc.pointInRect(Game.mouseLoc, new Vector(location.x, location.y), new Vector(location.x+20, location.y+20)) &&
-				Game.eventHandler.hasEvent("mouse-click_1"))
+		if(minimizable && Calc.pointInRect(Game.control.mouse, new Vector(location.x, location.y), new Vector(location.x+20, location.y+20)) &&
+				Game.control.isJustReleased("M1"))
 			minimized = !minimized;
 		
-		if(closable && Calc.pointInRect(Game.mouseLoc, new Vector(location.x + (int)size.x - 20, location.y),
-				new Vector(location.x + (int)size.x, location.y + 20)) && Game.eventHandler.hasEvent("mouse-click_1"))
+		if(closable && Calc.pointInRect(Game.control.mouse, new Vector(location.x + (int)size.x - 20, location.y),
+				new Vector(location.x + (int)size.x, location.y + 20)) && Game.control.isJustReleased("M1"))
 			close();
 		
-		if(Calc.pointInRect(Game.mouseLoc, new Vector(location.x, location.y), new Vector(location.x + (int)size.x, location.y + 20)))
-			anchor = new Vector(Game.mouseLoc.x - location.x, Game.mouseLoc.y - location.y);
+		if(Calc.pointInRect(Game.control.mouse, new Vector(location.x, location.y), new Vector(location.x + (int)size.x, location.y + 20)))
+			anchor = new Vector(Game.control.mouse.x - location.x, Game.control.mouse.y - location.y);
 	}
 	
 	public void tick()
 	{
-		if(Game.eventHandler.hasEvent("mouse-drag_1") && anchor != null)
-			location = new Vector(Game.mouseLoc.x - anchor.x, Game.mouseLoc.y - anchor.y);
+		if(anchor != null)
+			location = new Vector(Game.control.mouse.x - anchor.x, Game.control.mouse.y - anchor.y);
 		
-		if(Game.eventHandler.hasEvent("mouse-release_1") && anchor != null)
+		if(Game.control.isJustReleased("M1") && anchor != null)
 			anchor = null;
 	}
 	
@@ -100,7 +97,6 @@ public class Panel
 	
 	public void close()
 	{
-		Game.eventQueue.addEvent(new Event("panel-close", 1, title));
 		Game.closedPanels.add(this);
 		Game.openPanels.remove(this);
 	}
@@ -123,15 +119,15 @@ public class Panel
 
 		public boolean checkOpen()
 		{
-			return Game.eventHandler.hasEvent("key-press_e");
+			return Game.control.isPressed("E");
 		}
 		
 		public void click()
 		{
 			super.click();
 
-			if(Calc.pointInRect(Game.mouseLoc,
-					new Vector(location.x-1, location.y+20), new Vector(location.x+size.x+1, location.y+(minimized?20:size.y)+1)))
+			if(Calc.pointInRect(Game.control.mouse, new Vector(location.x-1, location.y+20),
+					new Vector(location.x+size.x+1, location.y+(minimized?20:size.y)+1)))
 			{
 				//TODO Add inventory interaction
 			}
@@ -141,7 +137,7 @@ public class Panel
 		{
 			super.tick();
 			
-			if(Game.eventHandler.hasEvent("key-press_e") && !Game.eventQueue.hasEvent("panel-open", title))
+			if(Game.control.isPressed("E"))
 				close();
 		}
 		
@@ -194,7 +190,7 @@ public class Panel
 		
 		public boolean checkOpen()
 		{
-			return Game.eventHandler.hasEvent("key-press_`");
+			return Game.control.isPressed("`");
 		}
 		
 		public void log(String string)
@@ -208,7 +204,7 @@ public class Panel
 		{
 			super.tick();
 			
-			if(Game.eventHandler.hasEvent("key-press_`") && !Game.eventQueue.hasEvent("panel-open", title))
+			if(Game.control.isPressed("`"))
 				close();
 		}
 		
@@ -254,8 +250,8 @@ public class Panel
 			
 			if(!message.equals(bufferedMessage))
 				bufferedMessage += message.charAt(bufferedMessage.length());
-			
-			if(Game.eventHandler.hasEvent("key-press_ ") && !Game.eventQueue.hasEvent("panel-open", title))
+
+			if(Game.control.isPressed("Space"))
 				if(!message.equals(bufferedMessage))
 					bufferedMessage += message.substring(bufferedMessage.length(), bufferedMessage.length() + 10 > message.length() ?
 							bufferedMessage.length() + 10 : message.length());
@@ -303,7 +299,7 @@ public class Panel
 		public void click()
 		{
 			for(int i = 0; i < options.length && StageEvent.CUT_SCENE; i++)
-				if(Calc.pointInRect(Game.mouseLoc, new Vector((int)location.x + 2, (int)location.y + 22 + i * 15),
+				if(Calc.pointInRect(Game.control.mouse, new Vector((int)location.x + 2, (int)location.y + 22 + i * 15),
 						new Vector((int)location.x + 6 + 6 * options[i].length(), (int)location.y + 35 + i * 15)))
 				{
 					close();

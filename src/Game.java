@@ -50,9 +50,9 @@ public class Game extends JPanel
 	public static int step = 0;
 	public static EntityHandler entities;
 	public static ArrayList<Entity> selectedEntities;
-	public static EventHandler eventHandler, eventQueue;
+	public static Control control;
 	public static Player player;
-	public static Vector cameraLoc, mouseLoc, selectLocStart;
+	public static Vector cameraLoc, selectLocStart;
 	public static ArrayList<Panel> openPanels, closedPanels;
 	public static ArrayList<StageEvent> queuedStageEvents, activeStageEvents;
 	public static Panel.DebugConsole debugPanel;
@@ -63,10 +63,8 @@ public class Game extends JPanel
 	{
 		entities = new EntityHandler(300);
 		selectedEntities = new ArrayList<Entity>();
-		eventHandler = new EventHandler();
-		eventQueue = new EventHandler();
+		control = new Control();
 		cameraLoc = new Vector();
-		mouseLoc = new Vector();
 		selectLocStart = null;
 
 		openPanels = new ArrayList<Panel>();
@@ -91,76 +89,38 @@ public class Game extends JPanel
 		this.addKeyListener(new KeyAdapter(){
 			public void keyPressed(KeyEvent e)
 			{
-				String key = "";
-				switch (e.getKeyCode())
-				{
-					case KeyEvent.VK_ESCAPE:
-						key = "esc";
-						break;
-					default:
-						key = e.getKeyChar()+"";
-						break;
-				}
-				eventQueue.addEvent(new Event("key-press_"+key, 1));
-				eventQueue.addEvent(new Event("key-down_"+key, -1));
+				control.press(KeyEvent.getKeyText(e.getKeyCode()));
 			}
 			
 			public void keyReleased(KeyEvent e)
 			{
-				String key = "";
-				switch (e.getKeyCode())
-				{
-					case KeyEvent.VK_ESCAPE:
-						key = "esc";
-						break;
-					default:
-						key = e.getKeyChar()+"";
-						break;
-				}
-				eventQueue.addEvent(new Event("key-release_"+key, 1));
-				eventHandler.removeEvent("key-down_"+key);
+				control.release(KeyEvent.getKeyText(e.getKeyCode()));
 			}
 		});
 		
 		this.addMouseListener(new MouseAdapter(){
 			public void mousePressed(MouseEvent e)
 			{
-				eventQueue.addEvent(new Event("mouse-press_"+e.getButton(), 1, new Vector(e.getX(), e.getY())));
-				eventQueue.addEvent(new Event("mouse-down_"+e.getButton(), -1, new Vector(e.getX(), e.getY())));
-			}
-			
-			public void mouseClicked(MouseEvent e)
-			{
-				eventQueue.addEvent(new Event("mouse-click_"+e.getButton(), 1, new Vector(e.getX(), e.getY())));
+				control.press("M" + e.getButton());
 			}
 			
 			public void mouseReleased(MouseEvent e)
 			{
-				eventQueue.addEvent(new Event("mouse-release_"+e.getButton(), 1, new Vector(e.getX(), e.getY())));
-				eventHandler.removeEvent("mouse-down_"+e.getButton());
+				control.release("M" + e.getButton());
 			}
 		});
 		
 		this.addMouseMotionListener(new MouseMotionAdapter(){
 			public void mouseMoved(MouseEvent e)
 			{
-				eventQueue.addEvent(new Event("mouse-move_"+e.getButton(), 1, new Vector(e.getX(), e.getY())));
-				mouseLoc.x = e.getX();
-				mouseLoc.y = e.getY();
+				control.mouse.x = e.getX();
+				control.mouse.y = e.getY();
 			}
 			
 			public void mouseDragged(MouseEvent e)
 			{
-				int button = 0;
-				if(eventHandler.hasEvent("mouse-down_1"))
-					button = 1;
-				else if(eventHandler.hasEvent("mouse-down_2"))
-					button = 2;
-				else if(eventHandler.hasEvent("mouse-down_3"))
-					button = 3;
-				eventQueue.addEvent(new Event("mouse-drag_"+button, 1, new Vector(e.getX(), e.getY())));
-				mouseLoc.x = e.getX();
-				mouseLoc.y = e.getY();
+				control.mouse.x = e.getX();
+				control.mouse.y = e.getY();
 			}
 		});
 	}
@@ -175,13 +135,16 @@ public class Game extends JPanel
 		for(int i = 0; i < closedPanels.size(); i++)
 			if(closedPanels.get(i).checkOpen())
 				closedPanels.get(i).open();
-		if(eventHandler.hasEvent("mouse-press_1") || eventHandler.hasEvent("mouse-press_3"))
-			for(int i = openPanels.size()-1; i >= 0 && !Game.eventHandler.hasEvent("panel-click"); i--)
-				if(Calc.pointInRect(mouseLoc, openPanels.get(i).location, openPanels.get(i).minimized ?
+		if(control.isJustReleased("M1") || control.isJustReleased("M3"))
+			for(int i = openPanels.size()-1; i >= 0; i--)
+				if(Calc.pointInRect(control.mouse, openPanels.get(i).location, openPanels.get(i).minimized ?
 						new Vector(openPanels.get(i).location.x + openPanels.get(i).size.x, openPanels.get(i).location.y + 21) :
 						new Vector(openPanels.get(i).location.x + openPanels.get(i).size.x,
 								openPanels.get(i).location.y + openPanels.get(i).size.y + 1)))
+				{
 					openPanels.get(i).click();
+					break;
+				}
 		for(int i = 0; i < openPanels.size(); i++)
 			openPanels.get(i).tick();
 		
@@ -195,14 +158,18 @@ public class Game extends JPanel
 		for(int i = 0; i < activeStageEvents.size(); i++)
 			activeStageEvents.get(i).tick();
 
-		if(eventHandler.hasEvent("mouse-press_1") || eventHandler.hasEvent("mouse-press_3"))
-			for(int i = entities.size()-1; i >= 0 && !Game.eventHandler.hasEvent("panel-click"); i--)
-				if(Calc.pointInRect(new Vector(mouseLoc.x + cameraLoc.x - S_WIDTH/2, mouseLoc.y + cameraLoc.y - S_HEIGHT/2),
+		if(control.isJustReleased("M1"))
+			for(int i = entities.size()-1; i >= 0; i--)
+				if(Calc.pointInRect(new Vector(control.mouse.x + cameraLoc.x - S_WIDTH/2,
+						control.mouse.y + cameraLoc.y - S_HEIGHT/2),
 						new Vector(entities.get(i).location.x - entities.get(i).dimension.x/2,
 						entities.get(i).location.y - entities.get(i).dimension.y/2),
 						new Vector(entities.get(i).location.x + entities.get(i).dimension.x/2,
 						entities.get(i).location.y + entities.get(i).dimension.y/2 + 1)))
+				{
 					entities.get(i).click();
+					break;
+				}
 		if(!StageEvent.FREEZE_ENTITIES)
 		{
 			entities.tick();
@@ -212,14 +179,13 @@ public class Game extends JPanel
 		if(StageEvent.CUT_SCENE)
 			StageEvent.actors.tick();
 		
-		if(eventHandler.hasEvent("key-press_esc") || eventHandler.hasEvent("mouse-click_1") || eventHandler.hasEvent("mouse-drag_1") &&
-				!eventQueue.hasEvent("panel-press"))
+		if(control.isJustReleased("ESC") || control.isJustReleased("M1"))
 			selectedEntities.clear();
-		if(eventHandler.hasEvent("mouse-press_1") && !eventQueue.hasEvent("panel-press"))
-			selectLocStart = ((Vector) eventHandler.getData("mouse-press_1").get(0)).clone();
-		if(eventHandler.hasEvent("mouse-release_1") && selectLocStart != null)
+		if(control.isPressedTime("M1") == 1)
+			selectLocStart = control.mouse.clone();
+		if(control.isJustReleased("M1") && selectLocStart != null)
 		{
-			Vector selectLocEnd = (Vector) eventHandler.getData("mouse-release_1").get(0);
+			Vector selectLocEnd = control.mouse.clone();
 			for(int i = 0; i < entities.size(); i++)
 				if(Calc.rectOverlapsRect(new Vector(selectLocStart.x-S_WIDTH/2+cameraLoc.x, selectLocStart.y - S_HEIGHT/2 + cameraLoc.y),
 						new Vector(selectLocEnd.x - S_WIDTH/2 + cameraLoc.x, selectLocEnd.y - S_HEIGHT/2 + cameraLoc.y),
@@ -231,8 +197,7 @@ public class Game extends JPanel
 			selectLocStart = null;
 		}
 
-		eventHandler.tick();
-		eventQueue.transferTo(eventHandler);
+		control.tick();
 		
 		if(!StageEvent.CAMERA_GRAB && player != null)
 			cameraLoc.doDelta(new Vector((player.location.x - cameraLoc.x)/8, (player.location.y - cameraLoc.y)/8));
@@ -257,16 +222,19 @@ public class Game extends JPanel
 			if(selectLocStart != null)
 			{
 				g.setColor(Color.cyan);
-				g.drawRect((int)(selectLocStart.x < mouseLoc.x ? selectLocStart.x : mouseLoc.x),
-						(int)(selectLocStart.y < mouseLoc.y ? selectLocStart.y : mouseLoc.y),
-						(int)((selectLocStart.x < mouseLoc.x) ? (mouseLoc.x - selectLocStart.x) : (selectLocStart.x - mouseLoc.x)),
-						(int)((selectLocStart.y < mouseLoc.y) ? (mouseLoc.y - selectLocStart.y) : (selectLocStart.y - mouseLoc.y)));
+				g.drawRect((int)(selectLocStart.x < control.mouse.x ? selectLocStart.x : control.mouse.x),
+						(int)(selectLocStart.y < control.mouse.y ? selectLocStart.y : control.mouse.y),
+						(int)((selectLocStart.x < control.mouse.x) ? (control.mouse.x - selectLocStart.x) :
+							(selectLocStart.x - control.mouse.x)),
+						(int)((selectLocStart.y < control.mouse.y) ? (control.mouse.y - selectLocStart.y) :
+							(selectLocStart.y - control.mouse.y)));
 			}
 			
-			if(eventHandler.hasEvent("key-down_ "))
+			if(control.isPressed("Space"))
 			{
 				g.setColor(Color.orange);
-				g.drawOval((int)(mouseLoc.x-WHISTLE_RANGE), (int)(mouseLoc.y-WHISTLE_RANGE), WHISTLE_RANGE*2, WHISTLE_RANGE*2);
+				g.drawOval((int)(control.mouse.x-WHISTLE_RANGE), (int)(control.mouse.y-WHISTLE_RANGE),
+						WHISTLE_RANGE*2, WHISTLE_RANGE*2);
 			}
 		}
 		else

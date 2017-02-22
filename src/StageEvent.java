@@ -36,7 +36,6 @@ public class StageEvent
 	public void complete()
 	{
 		Game.activeStageEvents.remove(this);
-		Game.eventQueue.addEvent(new Event("stage-event-complete", 1, name));
 	}
 	
 	public static class OpeningStage extends StageEvent
@@ -71,7 +70,7 @@ public class StageEvent
 		
 		public void tick()
 		{
-			if(Game.eventHandler.hasEvent("panel-close", "Narrator"))
+			if(Game.closedPanels.contains(Game.stageMessagePanel))
 				complete();
 		}
 		
@@ -176,8 +175,8 @@ public class StageEvent
 				star.images.add(imgs);
 				actors.add(star);
 			}
-			
-			if(Game.eventHandler.hasEvent("panel-close", "Narrator"))
+
+			if(Game.closedPanels.contains(Game.stageMessagePanel))
 				complete();
 		}
 		
@@ -247,7 +246,7 @@ public class StageEvent
 		
 		public void tick()
 		{
-			if(Game.eventHandler.hasEvent("panel-close", "Narrator"))
+			if(Game.closedPanels.contains(Game.stageMessagePanel))
 				complete();
 		}
 		
@@ -419,7 +418,7 @@ public class StageEvent
 		
 		public void tick()
 		{
-			if(Game.eventHandler.hasEvent("panel-close", "Narrator"))
+			if(Game.closedPanels.contains(Game.stageMessagePanel))
 				complete();
 		}
 		
@@ -470,7 +469,7 @@ public class StageEvent
 				{
 					super.click();
 					
-					if(Game.eventQueue.hasEvent("entity-click", this, 3))
+					if(Game.control.isJustReleased("M3"))
 						this.health-=5;
 				}
 			};
@@ -502,13 +501,16 @@ public class StageEvent
 		
 		public void tick()
 		{
-			if(Game.eventHandler.hasEvent("panel-close", "Player"))
+			if(Game.closedPanels.contains(Game.stageMessagePanel))
 				complete();
 		}
 		
 		public void complete()
 		{
 			super.complete();
+			
+			DARKEN_SCREEN = false;
+			FREEZE_ENTITIES = false;
 			
 			Game.queuedStageEvents.add(new ControlsEvent());
 		}
@@ -523,8 +525,10 @@ public class StageEvent
 
 		public void trigger()
 		{
-			
 			super.trigger();
+
+			DARKEN_SCREEN = true;
+			FREEZE_ENTITIES = true;
 
 			Game.stageMessagePanel.createMessage("Controls", Game.player.images.get(0).get(0), "Movement: WASD\nInventory: e"
 					+ "\nDebug: `\nSelect: Click + Drag\nCommand: Click\nAction: Right Click\nWhistle: Space");
@@ -532,7 +536,7 @@ public class StageEvent
 		
 		public void tick()
 		{
-			if(Game.eventHandler.hasEvent("panel-close", "Controls"))
+			if(Game.closedPanels.contains(Game.stageMessagePanel))
 				complete();
 		}
 		
@@ -578,7 +582,7 @@ public class StageEvent
 		
 		public void tick()
 		{
-			if(Game.eventHandler.hasEvent("panel-close", "Player"))
+			if(Game.closedPanels.contains(Game.stageMessagePanel))
 				complete();
 		}
 		
@@ -602,10 +606,12 @@ public class StageEvent
 		
 		public boolean checkTrigger()
 		{
-			if(Game.eventHandler.hasEvent("entity-remove") && ((Entity)Game.eventHandler.getData("entity-remove").get(0)).name.equals("Debris"))
-				return true;
-			else
-				return false;
+			//TODO Add pointer from debris' removal to trigger
+//			if(Game.eventHandler.hasEvent("entity-remove") && ((Entity)Game.eventHandler.getData("entity-remove").get(0)).name.equals("Debris"))
+//				return true;
+//			else
+//				return false;
+			return false;
 		}
 
 		public void trigger()
@@ -623,7 +629,7 @@ public class StageEvent
 		
 		public void tick()
 		{
-			if(Game.eventHandler.hasEvent("panel-close", "Player"))
+			if(Game.closedPanels.contains(Game.stageMessagePanel))
 				complete();
 		}
 		
@@ -633,8 +639,6 @@ public class StageEvent
 			
 			DARKEN_SCREEN = false;
 			FREEZE_ENTITIES = false;
-			
-//			Game.queuedStageEvents.add(new ControlsEvent());
 		}
 	}
 }
