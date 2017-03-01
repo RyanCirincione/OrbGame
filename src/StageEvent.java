@@ -451,6 +451,7 @@ public class StageEvent
 			Game.entities.add(Game.player);
 			Tree firstTree = new Tree("Tree", new Vector(-300, -300), new Vector(96, 96), new Vector(), 50, 0, 45, 10000);
 			Game.entities.add(firstTree);
+			Game.tasks.add(new Task(firstTree.location, Task.HARVEST, firstTree));
 			Entity debris = new Entity("Debris", new Vector(250, 100), new Vector(64, 64), new Vector(), 300, 0, 35, 0.99){
 				public void tick()
 				{
@@ -483,11 +484,20 @@ public class StageEvent
 			}
 			debris.images.add(imgs);
 			Game.entities.add(debris);
+			Game.tasks.add(new Task(debris.location, Task.FIGHT, debris));
 			
 			Orb firstOrb = new Orb("Orb", new Vector(200, 100), new Vector(), 50, 3, null);
-			firstOrb.action = Orb.Action.FIGHTING;
-			firstOrb.target = debris;
 			Game.entities.add(firstOrb);
+			Game.entities.add(firstOrb.clone());
+			Game.entities.add(firstOrb.clone());
+			Game.entities.add(firstOrb.clone());
+			Game.entities.add(firstOrb.clone());
+			Game.entities.add(firstOrb.clone());
+			Game.entities.add(firstOrb.clone());
+			Game.entities.add(firstOrb.clone());
+			Game.entities.add(firstOrb.clone());
+			Game.entities.add(firstOrb.clone());
+			
 
 			Game.closedPanels.add(new Panel.InventoryPanel("Inventory", new Vector(5, 5), 11));
 			Game.closedPanels.add(new Panel.InfoPanel("", new Vector(5, 5), new Vector()));

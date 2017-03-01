@@ -50,6 +50,7 @@ public class Game extends JPanel
 	public static int step = 0;
 	public static EntityHandler entities;
 	public static ArrayList<Entity> selectedEntities;
+	public static ArrayList<Task> tasks;
 	public static Control control;
 	public static Player player;
 	public static Vector cameraLoc, selectLocStart;
@@ -63,6 +64,7 @@ public class Game extends JPanel
 	{
 		entities = new EntityHandler(300);
 		selectedEntities = new ArrayList<Entity>();
+		tasks = new ArrayList<Task>();
 		control = new Control();
 		cameraLoc = new Vector();
 		selectLocStart = null;

@@ -7,6 +7,7 @@ import javax.imageio.ImageIO;
 public class Player extends Entity
 {
 	public Inventory inventory;
+	public int chargeCooldown;
 	
 	public Player(String name, Vector location, Vector dimension, Vector velocity,
 			int health, int speed, int volume, double mass, Vector invSize)
@@ -23,6 +24,7 @@ public class Player extends Entity
 			e.printStackTrace();
 		}
 		images.add(imgs);
+		chargeCooldown = 0;
 	}
 	
 	public void doControl()
@@ -42,5 +44,8 @@ public class Player extends Entity
 	public void tick()
 	{
 		super.tick();
+		
+		if(chargeCooldown > 0)
+			chargeCooldown--;
 	}
 }

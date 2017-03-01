@@ -3,6 +3,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
+
 import javax.imageio.ImageIO;
 
 public class Orb extends Entity
@@ -28,10 +30,10 @@ public class Orb extends Entity
 	}
 	
 	public enum Action {
-		IDLE, FOLLOWING, TRAVELING, FIGHTING, CARRYING, MINING, HARVESTING
+		IDLE, FOLLOWING, TRAVELLING, FIGHTING, CARRYING, HARVESTING
 	}
 	
-	static final int FOLLOWING_RANGE = 150, TRAVELING_RANGE = 50;
+	static final int FOLLOWING_RANGE = 150, TRAVELING_RANGE = 50, TASK_RANGE = 200;
 	public int cooldown;
 	public Type type;
 	public Action action;
@@ -72,9 +74,6 @@ public class Orb extends Entity
 				new Vector(Game.control.mouse.x - Game.S_WIDTH/2 + Game.cameraLoc.x,
 				Game.control.mouse.y - Game.S_HEIGHT/2 + Game.cameraLoc.y)) <= Game.WHISTLE_RANGE * Game.WHISTLE_RANGE)
 			action = Action.FOLLOWING;
-		
-		if(target instanceof Entity && ((Entity)target).remove)
-			action = Action.IDLE;
 	}
 	
 	public void doControl()
@@ -83,48 +82,54 @@ public class Orb extends Entity
 		
 		switch (action)
 		{
-			case IDLE:
+		case IDLE:
+			checkTasks();
+			break;
+		case FOLLOWING:
+			if(location.distance2(Game.player.location) > FOLLOWING_RANGE*FOLLOWING_RANGE)
+				target = Game.player.location.clone();
+			else
 				target = null;
-			case FOLLOWING:
-				if(location.distance2(Game.player.location) > FOLLOWING_RANGE*FOLLOWING_RANGE)
-					target = Game.player.location.clone();
-				else
-					target = null;
-				
-				//TODO Completely fix harvesting to not be in terms of eventHandler
-//				if(Game.eventHandler.hasEvent("entity-click") && Game.eventHandler.getData("entity-click").get(0)
-//						instanceof Harvestable && Game.eventHandler.getData("entity-click").get(1).equals(3))
-//				{
-//					target = Game.eventHandler.getData("entity-click").get(0);
-//					action = Action.HARVESTING;
-//				}
-				break;
-			case TRAVELING:
-				if(location.distance2((Vector) target) <= TRAVELING_RANGE*TRAVELING_RANGE)
+			
+			if(Game.control.isPressed("M1") && Game.player.chargeCooldown == 0)
+			{
+				Game.player.chargeCooldown = 3; //TODO make const
+				action = Action.TRAVELLING;
+				target = new Vector(Game.control.mouse.x - Game.S_WIDTH/2 + Game.cameraLoc.x,
+						Game.control.mouse.y - Game.S_HEIGHT/2 + Game.cameraLoc.y);
+			}
+			break;
+		case TRAVELLING:
+			if(location.distance2((Vector) target) <= TRAVELING_RANGE*TRAVELING_RANGE)
+			{
+				target = null;
+				action = Action.IDLE;
+			}
+			checkTasks();
+			break;
+		case FIGHTING:
+			if(location.distance2(((Entity)target).location) <= Math.pow(volume + ((Entity)target).volume, 2) && cooldown == 0)
+			{
+				cooldown = 30;
+				((Entity)target).health -= type == Type.FIGHTER ? 5 : 2;
+				if(((Entity)target).remove)
 				{
-					target = null;
 					action = Action.IDLE;
+					target = null;
 				}
-				break;
-			case FIGHTING:
-				if(location.distance2(((Entity)target).location) <= Math.pow(volume + ((Entity)target).volume, 2) && cooldown == 0)
-				{
-					cooldown = 30;
-					((Entity)target).health -= type == Type.FIGHTER ? 5 : 2;
-				}
-				break;
-			case HARVESTING:
-				//TODO Make harvest range a const
-				if(location.distance2(((Entity)target).location) < Math.pow(volume + ((Entity)target).volume + 5, 2))
-					((Harvestable)target).harvest(type == Type.HARVESTER ? 1 : 0);
-				break;
-			default:
-				break;
+			}
+			break;
+		case HARVESTING:
+			if(location.distance2(((Entity)target).location) < Math.pow(volume + ((Entity)target).volume + 5, 2))
+				((Harvestable)target).harvest(type == Type.HARVESTER ? 1 : 0);
+			break;
+		default:
+			break;
 		}
 		
 		if(Game.control.isJustReleased("M1") && Game.selectedEntities.contains(this))
 		{
-			action = Action.TRAVELING;
+			action = Action.TRAVELLING;
 			Vector click = ((Vector) Game.control.mouse.clone());
 			target = new Vector(click.x - Game.S_WIDTH/2 + Game.cameraLoc.x, click.y - Game.S_HEIGHT/2 + Game.cameraLoc.y);
 		}
@@ -133,9 +138,16 @@ public class Orb extends Entity
 		switch(action)
 		{
 			case FOLLOWING:
-			case TRAVELING:
+			case TRAVELLING:
 				if(target != null)
 					control = new Vector(((Vector)target).x - location.x, ((Vector)target).y - location.y);
+				break;
+			case CARRYING:
+				Vector goal = new Vector(((Entity)((Task)target).data.get(0)).location.x -
+						((Vector)((Task)target).data.get(1)).x, ((Entity)((Task)target).data.get(0)).location.y -
+						((Vector)((Task)target).data.get(1)).y).normalize();
+				goal.scalar(((Entity)((Task)target).data.get(0)).volume/2);
+				control = new Vector(goal.x - location.x, goal.y - location.y);
 				break;
 			case FIGHTING:
 				if(cooldown == 0)
@@ -149,6 +161,41 @@ public class Orb extends Entity
 				break;
 			default:
 				break;
+		}
+	}
+	
+	private void checkTasks()
+	{
+		Iterator<Task> iter = Game.tasks.iterator();
+		while(iter.hasNext())
+		{
+			Task t = iter.next();
+			if(((Entity)t.data.get(0)).remove)
+			{
+				iter.remove();
+				continue;
+			}
+			if(location.distance2(t.location) < TASK_RANGE*TASK_RANGE)
+			{
+				switch(t.type)
+				{
+				case Task.CARRY:
+					action = Action.CARRYING;
+					target = t;
+					break;
+				case Task.HARVEST:
+					action = Action.HARVESTING;
+					target = t.data.get(0);
+					break;
+				case Task.FIGHT:
+					action = Action.FIGHTING;
+					target = t.data.get(0);
+					break;
+				default:
+					break;
+				}
+				break;
+			}
 		}
 	}
 	
